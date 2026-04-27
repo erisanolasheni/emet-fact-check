@@ -2,19 +2,19 @@
   "ServiceName": "emet-frontend",
   "SourceConfiguration": {
     "AuthenticationConfiguration": {
-      "AccessRoleArn": "arn:aws:iam::490004626437:role/service-role/AppRunnerECRAccessRole"
+      "AccessRoleArn": "arn:aws:iam::ACCOUNT_ID:role/service-role/AppRunnerECRAccessRole"
     },
     "AutoDeploymentsEnabled": false,
     "ImageRepository": {
-      "ImageIdentifier": "490004626437.dkr.ecr.us-east-1.amazonaws.com/emet-frontend:amd64",
+      "ImageIdentifier": "ACCOUNT_ID.dkr.ecr.REGION.amazonaws.com/emet-frontend:amd64",
       "ImageRepositoryType": "ECR",
       "ImageConfiguration": {
         "Port": "3000",
         "RuntimeEnvironmentVariables": {
-          "NEXT_PUBLIC_API_URL": "https://xckzkpf7nj.us-east-1.awsapprunner.com",
-          "NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY": "pk_test_ZnJlc2gtbW9sbHVzay05MC5jbGVyay5hY2NvdW50cy5kZXYk",
+          "NEXT_PUBLIC_API_URL": "https://YOUR-BACKEND-SERVICE.REGION.awsapprunner.com",
+          "NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY": "pk_test_...",
           "NEXT_PUBLIC_CLERK_PREMIUM_PLAN_KEY": "emet_subscription",
-          "CLERK_SECRET_KEY": "sk_test_cLc7qub4Fzqm59hf6TnfLVzgkrBzn2TX41H5ulnUch"
+          "CLERK_SECRET_KEY": "sk_test_..."
         }
       }
     }
@@ -25,9 +25,9 @@
   },
   "HealthCheckConfiguration": {
     "Protocol": "HTTP",
-    "Path": "/",
+    "Path": "/api/health",
     "Interval": 10,
-    "Timeout": 5,
+    "Timeout": 15,
     "HealthyThreshold": 1,
     "UnhealthyThreshold": 5
   }

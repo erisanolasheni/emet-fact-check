@@ -1,3 +1,5 @@
 npm-debug.log*
 .env.local
 .env.production
+node_modules
+.next

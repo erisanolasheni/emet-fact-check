@@ -1,0 +1,31 @@
+{
+  "ServiceArn": "arn:aws:apprunner:REGION:ACCOUNT_ID:service/emet-backend/SERVICE_ID",
+  "SourceConfiguration": {
+    "AuthenticationConfiguration": {
+      "AccessRoleArn": "arn:aws:iam::ACCOUNT_ID:role/service-role/AppRunnerECRAccessRole"
+    },
+    "AutoDeploymentsEnabled": false,
+    "ImageRepository": {
+      "ImageIdentifier": "ACCOUNT_ID.dkr.ecr.REGION.amazonaws.com/emet-backend:amd64",
+      "ImageRepositoryType": "ECR",
+      "ImageConfiguration": {
+        "Port": "8000",
+        "StartCommand": "uvicorn app.main:app --host 0.0.0.0 --port 8000",
+        "RuntimeEnvironmentVariables": {
+          "DATABASE_URL": "postgresql+asyncpg://USER:PASS@HOST:5432/emet",
+          "CLERK_JWKS_URL": "https://YOUR-CLERK-DOMAIN.clerk.accounts.dev/.well-known/jwks.json",
+          "CLERK_SECRET_KEY": "sk_test_...",
+          "CLERK_PREMIUM_PLAN_KEY": "emet_subscription",
+          "REQUIRE_SUBSCRIPTION": "false",
+          "OPENAI_API_KEY": "sk-or-v1-...",
+          "LLM_BASE_URL": "https://openrouter.ai/api/v1",
+          "LLM_MODEL": "openai/gpt-4o-mini",
+          "EMET_MOCK_PIPELINE": "false",
+          "USE_BACKGROUND_WORKER": "true",
+          "AWS_REGION": "us-east-1",
+          "CORS_ORIGINS": "http://localhost:3000,https://YOUR-CLOUDFRONT,https://YOUR-FRONTEND-APP-RUNNER"
+        }
+      }
+    }
+  }
+}

@@ -21,30 +21,72 @@ This document explains **what Emet entails** and **how it works** end to end.
 
 ## How it works (architecture)
 
-### High-level flow
+### Logical architecture
+
+End-to-end data flow: the UI talks to FastAPI with a Clerk JWT; jobs and **`progress`** live in the database; the fact-check **pipeline** (planner → parallel **search** → writer) runs **in-process** by default or can be **offloaded** via **SQS** + `worker_sqs.py`. SSE is implemented by **polling the job row** in the stream handler.
+
+```mermaid
+flowchart TB
+  Browser[Browser]
+  Clerk[Clerk]
+  Next[Next.js App Router]
+  API[FastAPI]
+  DB[(Postgres or SQLite)]
+  SSE[SSE GET /api/jobs/id/stream]
+  Pipe[Pipeline runner]
+  Plan[Planner agent]
+  Sea[Search layer]
+  Wr[Writer agent]
+  LLM[(OpenAI / OpenRouter)]
+  Ext[Web evidence: CSE / DDG / MCP / legacy tools]
+
+  Browser --> Clerk
+  Browser --> Next
+  Next -->|"REST + Bearer JWT"| API
+  Next --> SSE
+  API <--> DB
+  SSE -->|"polls job"| DB
+  API -->|"BackgroundTasks or SQS send"| Pipe
+  Pipe --> Plan
+  Plan --> Sea
+  Sea --> Wr
+  Plan --> LLM
+  Sea --> Ext
+  Sea --> LLM
+  Wr --> LLM
+  Pipe -->|"progress JSON + report_payload"| DB
+```
+
+### Production deployment (reference)
+
+Typical AWS layout: **ECR** hosts **`emet-frontend`** and **`emet-backend`** images; **App Runner** runs both services (**3000** / **8000**). **RDS Postgres** (or Aurora) holds job rows. Optionally **SQS** + a **worker** process repeats the same pipeline for scale; **Terraform** in this repo can add **SQS**, **S3**, and **CloudFront** for a static or alternate UI delivery path (see [`terraform/README.md`](terraform/README.md)).
 
 ```mermaid
 flowchart LR
-  subgraph client [Browser]
-    UI[Next.js UI]
+  subgraph Users
+    U[Browser users]
   end
-  subgraph api [Backend API]
-    API[FastAPI]
-    DB[(Postgres / SQLite)]
+  subgraph AWS["AWS"]
+    ECR[ECR]
+    FR[App Runner frontend]
+    BK[App Runner backend]
+    RDS[(RDS Postgres)]
+    Q[SQS optional]
+    WK[worker_sqs optional]
+    TF[Terraform: CloudFront + S3 optional]
   end
-  subgraph worker [Worker]
-    PL[Planner agent]
-    SR[Search MCP or web tools]
-    WR[Writer agent]
-  end
-  UI -->|JWT POST fact-check| API
-  UI -->|JWT GET jobs stream SSE| API
-  API --> DB
-  API -->|BackgroundTasks or SQS| worker
-  PL --> SR
-  SR --> WR
-  worker -->|progress + report_payload| DB
+  U --> FR
+  FR -->|"HTTPS API"| BK
+  BK --> RDS
+  BK -.->|"if configured"| Q
+  Q -.-> WK
+  WK -.-> RDS
+  ECR -.-> FR
+  ECR -.-> BK
+  TF -.->|"static assets"| U
 ```
+
+### Request lifecycle
 
 1. **Authenticate** — Clerk issues a session; the frontend sends **`Authorization: Bearer <JWT>`** to the API.
 2. **Authorize** — Clerk session; **`POST /api/fact-check`** uses **`require_premium`**: when **`REQUIRE_SUBSCRIPTION=false`**, any signed-in user may run jobs; when **`true`**, Clerk Billing must show the configured premium plan.
@@ -292,10 +334,36 @@ Native **`EventSource`** cannot send custom headers. Emet’s client uses **`fet
 
 ## Deploy (outline)
 
-1. **Frontend** — e.g. Vercel; set all `NEXT_PUBLIC_*` and Clerk keys.
-2. **Backend** — container or VM; long timeouts for LLM + search; if using SSE, avoid response buffering on the proxy.
-3. **Worker** — same codebase; use **SQS + `worker_sqs.py`** when you outgrow in-process tasks.
-4. **Database** — Neon / RDS; run **`alembic upgrade head`**.
+1. **Database** — Postgres reachable from the API (e.g. RDS); run **`cd backend && alembic upgrade head`** from a machine that can reach the DB.
+2. **Backend** — long-lived HTTP + SSE: use a container host (e.g. **AWS App Runner**, ECS, Fly). Set **`CORS_ORIGINS`** to your real frontend URL(s). The API Dockerfile is `backend/Dockerfile`.
+3. **Frontend** — Next.js needs **`NEXT_PUBLIC_*` baked at build time** for Docker (see `frontend/Dockerfile`). Point **`NEXT_PUBLIC_API_URL`** at the public backend URL.
+4. **Worker** (optional) — same codebase; use **SQS + `worker_sqs.py`** when you outgrow in-process tasks.
+
+### AWS App Runner + ECR (both services)
+
+Prerequisites: ECR repositories **`emet-backend`** and **`emet-frontend`**, two App Runner services pulling those images (port **8000** / **3000**), and runtime env vars set in the service (DB, Clerk, `OPENAI_API_KEY`, `CORS_ORIGINS`, etc.).
+
+From the repo root (Docker must support **linux/amd64**; Docker Desktop on Apple Silicon: enable **buildx**):
+
+```bash
+export AWS_REGION=us-east-1
+# Public values used when building the frontend image:
+export NEXT_PUBLIC_API_URL=https://YOUR-BACKEND-PUBLIC-URL.awsapprunner.com
+export NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_...
+export NEXT_PUBLIC_CLERK_PREMIUM_PLAN_KEY=emet_subscription
+
+# Optional: force new pull of the same tag
+export APP_RUNNER_BACKEND_ARN=arn:aws:apprunner:...
+export APP_RUNNER_FRONTEND_ARN=arn:aws:apprunner:...
+
+python3 scripts/deploy_app_runner.py
+```
+
+Alternatively, put the same three `NEXT_PUBLIC_*` values as on the frontend App Runner service into **`deploy/frontend-build.env`** (copy from **`deploy/frontend-build.env.example`**, keep that file gitignored) so you don’t re-export them each time. Shell exports still override the file.
+
+The script logs in to ECR, builds and pushes **emet-backend:amd64** and **emet-frontend:amd64**, then runs **`aws apprunner start-deployment`** when the ARN env vars are set. See **`scripts/deploy_app_runner.py`** for all options.
+
+Templates for App Runner payloads are **`deploy/apprunner-*.example.json`** (no secrets). Keep real copies like `deploy/apprunner-frontend.json` **local / gitignored**; prefer the App Runner console, **`aws apprunner update-service`**, or Parameter Store / Secrets Manager for runtime configuration.
 
 ### AWS: SQS + CloudFront with Terraform
 
