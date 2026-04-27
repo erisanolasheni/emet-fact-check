@@ -1,0 +1,7 @@
+project_name = "emet"
+aws_region     = "us-east-1"
+environment    = "dev"
+
+tags = {
+  Course = "capstone"
+}

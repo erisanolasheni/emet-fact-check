@@ -1,0 +1,34 @@
+{
+  "ServiceName": "emet-frontend",
+  "SourceConfiguration": {
+    "AuthenticationConfiguration": {
+      "AccessRoleArn": "arn:aws:iam::490004626437:role/service-role/AppRunnerECRAccessRole"
+    },
+    "AutoDeploymentsEnabled": false,
+    "ImageRepository": {
+      "ImageIdentifier": "490004626437.dkr.ecr.us-east-1.amazonaws.com/emet-frontend:amd64",
+      "ImageRepositoryType": "ECR",
+      "ImageConfiguration": {
+        "Port": "3000",
+        "RuntimeEnvironmentVariables": {
+          "NEXT_PUBLIC_API_URL": "https://xckzkpf7nj.us-east-1.awsapprunner.com",
+          "NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY": "pk_test_ZnJlc2gtbW9sbHVzay05MC5jbGVyay5hY2NvdW50cy5kZXYk",
+          "NEXT_PUBLIC_CLERK_PREMIUM_PLAN_KEY": "emet_subscription",
+          "CLERK_SECRET_KEY": "sk_test_cLc7qub4Fzqm59hf6TnfLVzgkrBzn2TX41H5ulnUch"
+        }
+      }
+    }
+  },
+  "InstanceConfiguration": {
+    "Cpu": "1 vCPU",
+    "Memory": "2 GB"
+  },
+  "HealthCheckConfiguration": {
+    "Protocol": "HTTP",
+    "Path": "/",
+    "Interval": 10,
+    "Timeout": 5,
+    "HealthyThreshold": 1,
+    "UnhealthyThreshold": 5
+  }
+}

@@ -1,0 +1,12 @@
+# Root app env (Clerk, DB, LLM, CORS) — use .env.example
+.env
+# Root-only local env files (if present)
+/.env.local
+/.env.*.local
+
+# SQLite DB files may appear outside backend/; keep out of vcs
+*.db
+
+# See also: frontend/.gitignore, backend/.gitignore, terraform/.gitignore
+
+.DS_Store
