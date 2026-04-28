@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { SignedIn, SignedOut, SignInButton, UserButton } from "@clerk/nextjs";
 
 export default function HomePage() {
   return (
@@ -15,25 +14,12 @@ export default function HomePage() {
           >
             Pricing
           </Link>
-          <SignedIn>
-            <Link
-              href="/check"
-              className="rounded-full bg-blue-600 px-5 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-            >
-              Open fact-check
-            </Link>
-            <UserButton afterSignOutUrl="/" />
-          </SignedIn>
-          <SignedOut>
-            <SignInButton mode="modal">
-              <button
-                type="button"
-                className="rounded-full bg-slate-900 px-5 py-2 text-sm font-medium text-white hover:bg-slate-800"
-              >
-                Sign in
-              </button>
-            </SignInButton>
-          </SignedOut>
+          <Link
+            href="/sign-in"
+            className="rounded-full bg-slate-900 px-5 py-2 text-sm font-medium text-white hover:bg-slate-800"
+          >
+            Sign in
+          </Link>
         </nav>
       </header>
 
@@ -44,28 +30,21 @@ export default function HomePage() {
         </h1>
         <p className="mt-6 text-lg leading-relaxed text-slate-600">
           Ask a question. Emet searches reputable sources, compares evidence, and returns cited
-          facts with an honest confidence score—built for subscribers who need more than a chatbot
-          answer.
+          facts with an honest confidence score.
         </p>
         <div className="mt-10 flex flex-wrap justify-center gap-4">
-          <SignedIn>
-            <Link
-              href="/check"
-              className="rounded-full bg-blue-600 px-8 py-3 text-sm font-semibold text-white shadow-lg shadow-blue-600/25 hover:bg-blue-700"
-            >
-              Start a check
-            </Link>
-          </SignedIn>
-          <SignedOut>
-            <SignInButton mode="modal">
-              <button
-                type="button"
-                className="rounded-full bg-blue-600 px-8 py-3 text-sm font-semibold text-white shadow-lg shadow-blue-600/25"
-              >
-                Sign in to continue
-              </button>
-            </SignInButton>
-          </SignedOut>
+          <Link
+            href="/check"
+            className="rounded-full bg-blue-600 px-8 py-3 text-sm font-semibold text-white shadow-lg shadow-blue-600/25 hover:bg-blue-700"
+          >
+            Start a check
+          </Link>
+          <Link
+            href="/sign-in"
+            className="rounded-full border border-slate-200 px-8 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+          >
+            Sign in
+          </Link>
         </div>
       </main>
     </div>

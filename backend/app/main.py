@@ -2,7 +2,10 @@ import os
 from contextlib import asynccontextmanager
 from pathlib import Path
 
+from agents import set_default_openai_client
+from agents.models._openai_shared import set_use_responses_by_default
 from dotenv import load_dotenv
+from openai import AsyncOpenAI
 
 _repo_root = Path(__file__).resolve().parents[2]
 load_dotenv(_repo_root / ".env", override=True)
@@ -24,11 +27,9 @@ async def lifespan(app: FastAPI):
 
     base = (settings.llm_base_url or "").strip().rstrip("/")
     if base and settings.openai_api_key:
-        # Route the OpenAI SDK to OpenRouter (or another OpenAI-compatible host). Keys like sk-or-v1-* are not valid on api.openai.com.
+        # OpenAI-compatible base URL: use chat completions, not the Responses API.
         os.environ["OPENAI_AGENTS_DISABLE_TRACING"] = "true"
-        from agents import set_default_openai_client
-        from openai import AsyncOpenAI
-
+        set_use_responses_by_default(False)
         set_default_openai_client(
             AsyncOpenAI(api_key=settings.openai_api_key, base_url=base),
             use_for_tracing=False,

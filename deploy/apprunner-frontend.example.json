@@ -27,7 +27,7 @@
     "Protocol": "HTTP",
     "Path": "/api/health",
     "Interval": 10,
-    "Timeout": 15,
+    "Timeout": 20,
     "HealthyThreshold": 1,
     "UnhealthyThreshold": 5
   }

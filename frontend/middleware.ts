@@ -9,6 +9,5 @@ export default clerkMiddleware((auth, req) => {
 });
 
 export const config = {
-  // Exclude /api/health so probes skip Clerk entirely (faster for App Runner).
-  matcher: ["/((?!api/health)(?!.+\\.[\\w]+$|_next).*)", "/"],
+  matcher: ["/((?!api/health)(?!.+\\.[\\w]+$|_next).*)"],
 };

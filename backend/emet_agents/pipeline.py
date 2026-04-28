@@ -10,6 +10,7 @@ from agents import Runner
 from emet_agents.evidence_sanitize import apply_allowed_urls, drop_forbidden_host_sources
 from emet_agents.planner import WebSearchPlan, planner_agent
 from emet_agents.result_schema import AgentFactItem, AgentSourceRef, FactCheckAgentResult
+from emet_agents.runner_config import get_run_config
 from emet_agents.search_factory import build_search_agent
 from emet_agents.writer import writer_agent
 
@@ -25,7 +26,6 @@ logger = logging.getLogger(__name__)
 
 
 def _clamp_claim_support_to_verdict(result: FactCheckAgentResult) -> FactCheckAgentResult:
-    """Safety: refuted main claims should not show high 'support for your claim' scores."""
     if result.verdict != "refuted" or result.confidence_percent <= 40:
         return result
     return result.model_copy(update={"confidence_percent": min(result.confidence_percent, 35)})
@@ -43,7 +43,6 @@ async def run_fact_check(
     on_progress: Callable[[dict], Awaitable[None]],
     max_searches: int = 5,
 ) -> FactCheckAgentResult:
-    """Run planner → parallel web searches → structured fact-check."""
     from agents.mcp import MCPServerManager
 
     from app.config import settings
@@ -62,7 +61,12 @@ async def run_fact_check(
 
     await emit("planning", "Planning targeted searches…", 10)
 
-    plan_result = await Runner.run(planner_agent, f"Question to fact-check:\n{question}")
+    run_config = get_run_config()
+    plan_result = await Runner.run(
+        planner_agent,
+        f"Question to fact-check:\n{question}",
+        run_config=run_config,
+    )
     plan = plan_result.final_output_as(WebSearchPlan)
     searches = plan.searches[:max_searches]
     total_s = len(searches)
@@ -85,7 +89,7 @@ async def run_fact_check(
 
     async def run_one(idx: int, item, search_agent) -> str:
         inp = f"Search query: {item.query}\nReason: {item.reason}\nOriginal question: {question}"
-        out = await Runner.run(search_agent, inp)
+        out = await Runner.run(search_agent, inp, run_config=run_config)
         pct = 25 + int(50 * (idx + 1) / max(total_s, 1))
         await emit(
             "searching",
@@ -172,7 +176,7 @@ async def run_fact_check(
         + "\n\n".join(f"Block {i+1}:\n{d}" for i, d in enumerate(digests))
     )
 
-    writer_result = await Runner.run(writer_agent, writer_input)
+    writer_result = await Runner.run(writer_agent, writer_input, run_config=run_config)
     result = writer_result.final_output_as(FactCheckAgentResult)
 
     if used_structured and allowed_urls:

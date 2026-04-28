@@ -1,5 +1,3 @@
-"""Server-side subscription check (Clerk Billing / Commerce)."""
-
 import logging
 from typing import Any
 
@@ -9,16 +7,23 @@ from app.config import settings
 
 logger = logging.getLogger(__name__)
 
-# Clerk Billing BAPI: https://clerk.com/docs/reference/backend/billing/get-user-billing-subscription
+SUBSCRIPTION_VERIFY_UNAVAILABLE_DETAIL = (
+    "Could not verify subscription with Clerk. Retry later or check outbound "
+    "HTTPS to api.clerk.com."
+)
+
+
+class ClerkSubscriptionUnavailable(Exception):
+    pass
+
+
 _BILLING_SUB = "https://api.clerk.com/v1/users/{user_id}/billing/subscription"
-# Older list endpoint; kept as fallback
 _COMMERCE_LIST = "https://api.clerk.com/v1/commerce/subscriptions"
 
 _ACTIVE = frozenset({"active", "trialing", "past_due"})
 
 
 def _plan_identifiers(obj: dict[str, Any]) -> set[str]:
-    """Collect every string Clerk might use as a plan handle (slug, id, legacy key)."""
     out: set[str] = set()
     plan = obj.get("plan")
     if isinstance(plan, dict):
@@ -72,7 +77,6 @@ def _commerce_subscription_has_plan(sub: dict[str, Any], want: str) -> bool:
                 return True
         return False
 
-    # Single-line subscription (no items array): try top-level plan fields
     if _want_matches_identifiers(want, _plan_identifiers(sub)) and _item_active(sub.get("status")):
         return True
     return False
@@ -99,11 +103,15 @@ def _legacy_list_has_plan(payload: Any, want: str) -> bool:
 
 
 async def _fetch_legacy_commerce_list(client: httpx.AsyncClient, clerk_user_id: str) -> Any | None:
-    r2 = await client.get(
-        _COMMERCE_LIST,
-        params={"user_id": clerk_user_id},
-        headers={"Authorization": f"Bearer {settings.clerk_secret_key}"},
-    )
+    try:
+        r2 = await client.get(
+            _COMMERCE_LIST,
+            params={"user_id": clerk_user_id},
+            headers={"Authorization": f"Bearer {settings.clerk_secret_key}"},
+        )
+    except httpx.RequestError as exc:
+        logger.warning("Clerk commerce list unreachable: %s", exc)
+        return None
     if r2.status_code >= 400:
         logger.warning(
             "Clerk commerce list -> %s: %s",
@@ -133,13 +141,17 @@ async def user_has_premium_plan(clerk_user_id: str) -> bool:
 
     async with httpx.AsyncClient(timeout=15.0) as client:
         billing_url = _BILLING_SUB.format(user_id=clerk_user_id)
-        r = await client.get(billing_url, headers=headers)
-        body_preview = (r.text or "")[:2000]
-        logger.info(
-            "Clerk billing GET %s -> HTTP %s (body first 2000 chars): %s",
+        try:
+            r = await client.get(billing_url, headers=headers)
+        except httpx.RequestError as exc:
+            logger.warning("Clerk billing unreachable (%s): %s", billing_url, exc)
+            raise ClerkSubscriptionUnavailable from exc
+
+        logger.debug(
+            "Clerk billing GET %s -> %s %s",
             billing_url,
             r.status_code,
-            body_preview,
+            (r.text or "")[:500],
         )
 
         if r.status_code == 200:
@@ -149,7 +161,6 @@ async def user_has_premium_plan(clerk_user_id: str) -> bool:
                 sub = None
             if isinstance(sub, dict) and _commerce_subscription_has_plan(sub, plan_key):
                 return True
-            # Billing returned 200 but shape did not match, or no active item: try legacy list
             legacy = await _fetch_legacy_commerce_list(client, clerk_user_id)
             if legacy is not None and _legacy_list_has_plan(legacy, plan_key):
                 return True

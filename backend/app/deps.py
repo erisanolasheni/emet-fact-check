@@ -6,7 +6,11 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from jwt import PyJWKClient
 
 from app.config import settings
-from app.services.subscription import user_has_premium_plan
+from app.services.subscription import (
+    ClerkSubscriptionUnavailable,
+    SUBSCRIPTION_VERIFY_UNAVAILABLE_DETAIL,
+    user_has_premium_plan,
+)
 
 logger = logging.getLogger(__name__)
 clerk_guard = HTTPBearer(auto_error=False)
@@ -36,7 +40,7 @@ async def get_current_user_id(
             },
             leeway=60,
         )
-    except Exception as exc:  # pragma: no cover - diagnostic path
+    except Exception as exc:
         logger.warning("Failed Clerk JWT verification against %s: %s", _jwks_url, exc)
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Invalid auth token") from exc
 
@@ -49,10 +53,16 @@ async def get_current_user_id(
 async def require_premium(
     user_id: str = Depends(get_current_user_id),
 ) -> str:
-    """When REQUIRE_SUBSCRIPTION is false, any signed-in user passes (local / open beta)."""
     if not settings.require_subscription:
         return user_id
-    if not await user_has_premium_plan(user_id):
+    try:
+        ok = await user_has_premium_plan(user_id)
+    except ClerkSubscriptionUnavailable as exc:
+        raise HTTPException(
+            status.HTTP_503_SERVICE_UNAVAILABLE,
+            SUBSCRIPTION_VERIFY_UNAVAILABLE_DETAIL,
+        ) from exc
+    if not ok:
         raise HTTPException(
             status.HTTP_403_FORBIDDEN,
             "Active subscription required for Emet fact-checking.",

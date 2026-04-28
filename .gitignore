@@ -7,9 +7,6 @@
 # SQLite DB files may appear outside backend/; keep out of vcs
 *.db
 
-# App Runner / ECR: production NEXT_PUBLIC_* for docker build (copy from example)
-/deploy/frontend-build.env
-
 # Local App Runner JSON with real ARNs and secrets — use *.example.json in repo
 /deploy/apprunner-frontend.json
 /deploy/apprunner-backend.json

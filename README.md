@@ -359,8 +359,6 @@ export APP_RUNNER_FRONTEND_ARN=arn:aws:apprunner:...
 python3 scripts/deploy_app_runner.py
 ```
 
-Alternatively, put the same three `NEXT_PUBLIC_*` values as on the frontend App Runner service into **`deploy/frontend-build.env`** (copy from **`deploy/frontend-build.env.example`**, keep that file gitignored) so you don’t re-export them each time. Shell exports still override the file.
-
 The script logs in to ECR, builds and pushes **emet-backend:amd64** and **emet-frontend:amd64**, then runs **`aws apprunner start-deployment`** when the ARN env vars are set. See **`scripts/deploy_app_runner.py`** for all options.
 
 Templates for App Runner payloads are **`deploy/apprunner-*.example.json`** (no secrets). Keep real copies like `deploy/apprunner-frontend.json` **local / gitignored**; prefer the App Runner console, **`aws apprunner update-service`**, or Parameter Store / Secrets Manager for runtime configuration.
