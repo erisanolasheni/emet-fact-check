@@ -391,13 +391,13 @@ GitHub Actions:
 
 - **`backend.yml`** — **Backend CI**: `pytest` on **pull requests** and **pushes** to branches other than `main`/`master` (plus **workflow_dispatch**).
 - **`frontend.yml`** — **Frontend CI**: **lint**, **test**, **build** on the same triggers.
-- **`deploy.yml`** — **Deploy**: on **push to `main`/`master`** or **workflow_dispatch**, runs **backend + frontend** checks (via reusable workflows), then **ECR** push + **App Runner** deployment (`scripts/deploy_app_runner.py`).
+- **`deploy.yml`** — **Deploy**: on **push to `main`/`master`** or **workflow_dispatch**, runs **backend + frontend** checks (via reusable workflows), then **ECR** + **App Runner** in **two steps**: **backend** (`--backend`) always; **frontend** (`--frontend`) only if **`NEXT_PUBLIC_API_URL`** is set as a repository variable (otherwise the workflow still **passes** and prints a warning—avoids failing the whole job when only backend CD is configured).
 
 Shared steps live in **`backend-ci.yml`** and **`frontend-ci.yml`** (`workflow_call` reusables) so tests are not duplicated across feature branches and `main`.
 
-**Repository secrets** (Settings → Secrets and variables → Actions): `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` (IAM user or role with ECR push + App Runner deploy), `APP_RUNNER_BACKEND_ARN`, `APP_RUNNER_FRONTEND_ARN`, `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`.
+**Repository secrets** (Settings → Secrets and variables → Actions): `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` (IAM user or role with ECR push + App Runner deploy), `APP_RUNNER_BACKEND_ARN`, `APP_RUNNER_FRONTEND_ARN` (needed for frontend deploy), `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` (needed for frontend Docker build).
 
-**Repository variables**: `NEXT_PUBLIC_API_URL` (public backend URL, e.g. `https://….awsapprunner.com`), `NEXT_PUBLIC_CLERK_PREMIUM_PLAN_KEY` (e.g. `emet_subscription`), optionally `AWS_REGION` (default `us-east-1`), `IMAGE_TAG` (default `amd64`).
+**Repository variables**: **`NEXT_PUBLIC_API_URL`** (required for **frontend** image build + deploy step), `NEXT_PUBLIC_CLERK_PREMIUM_PLAN_KEY` (e.g. `emet_subscription`), optionally `AWS_REGION` (default `us-east-1`), `IMAGE_TAG` (default `amd64`).
 
 IAM needs at least: `ecr:GetAuthorizationToken`; ECR push to `emet-backend` / `emet-frontend`; `apprunner:StartDeployment` (and `DescribeService` if you extend the script); `sts:GetCallerIdentity`.
 

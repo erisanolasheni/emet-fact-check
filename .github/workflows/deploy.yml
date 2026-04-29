@@ -38,13 +38,26 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ vars.AWS_REGION || 'us-east-1' }}
 
-      - name: Build & push images, start App Runner deployments
+      # Backend only — does not need NEXT_PUBLIC_* (frontend Docker build fails without them).
+      - name: ECR + App Runner (backend)
+        env:
+          AWS_REGION: ${{ vars.AWS_REGION || 'us-east-1' }}
+          IMAGE_TAG: ${{ vars.IMAGE_TAG || 'amd64' }}
+          APP_RUNNER_BACKEND_ARN: ${{ secrets.APP_RUNNER_BACKEND_ARN }}
+        run: python3 scripts/deploy_app_runner.py --backend
+
+      - name: ECR + App Runner (frontend)
+        if: ${{ vars.NEXT_PUBLIC_API_URL != '' }}
         env:
           AWS_REGION: ${{ vars.AWS_REGION || 'us-east-1' }}
           IMAGE_TAG: ${{ vars.IMAGE_TAG || 'amd64' }}
           NEXT_PUBLIC_API_URL: ${{ vars.NEXT_PUBLIC_API_URL }}
           NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY }}
           NEXT_PUBLIC_CLERK_PREMIUM_PLAN_KEY: ${{ vars.NEXT_PUBLIC_CLERK_PREMIUM_PLAN_KEY }}
-          APP_RUNNER_BACKEND_ARN: ${{ secrets.APP_RUNNER_BACKEND_ARN }}
           APP_RUNNER_FRONTEND_ARN: ${{ secrets.APP_RUNNER_FRONTEND_ARN }}
-        run: python3 scripts/deploy_app_runner.py
+        run: python3 scripts/deploy_app_runner.py --frontend
+
+      - name: Frontend deploy not configured
+        if: ${{ vars.NEXT_PUBLIC_API_URL == '' }}
+        run: |
+          echo "::warning::Set Actions variables NEXT_PUBLIC_API_URL, NEXT_PUBLIC_CLERK_PREMIUM_PLAN_KEY and secret NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY, plus APP_RUNNER_FRONTEND_ARN, to build and deploy the frontend image."
