@@ -387,7 +387,13 @@ cd backend && pytest
 cd frontend && npm run lint && npm run test && npm run build
 ```
 
-GitHub Actions: `.github/workflows/ci.yml`.
+GitHub Actions (`.github/workflows/ci.yml`): on every **push** and **pull request**, runs backend **pytest** and frontend **lint**, **test**, and **build**. On **push to `main`/`master`** (and on **workflow_dispatch**), after tests pass, **deploy** builds **linux/amd64** images, pushes to **ECR**, and runs **`aws apprunner start-deployment`** for backend and frontend (same as `scripts/deploy_app_runner.py`).
+
+**Repository secrets** (Settings → Secrets and variables → Actions): `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` (IAM user or role with ECR push + App Runner deploy), `APP_RUNNER_BACKEND_ARN`, `APP_RUNNER_FRONTEND_ARN`, `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`.
+
+**Repository variables**: `NEXT_PUBLIC_API_URL` (public backend URL, e.g. `https://….awsapprunner.com`), `NEXT_PUBLIC_CLERK_PREMIUM_PLAN_KEY` (e.g. `emet_subscription`), optionally `AWS_REGION` (default `us-east-1`), `IMAGE_TAG` (default `amd64`).
+
+IAM needs at least: `ecr:GetAuthorizationToken`; ECR push to `emet-backend` / `emet-frontend`; `apprunner:StartDeployment` (and `DescribeService` if you extend the script); `sts:GetCallerIdentity`.
 
 ---
 
