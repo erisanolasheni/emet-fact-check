@@ -35,7 +35,6 @@ async def get_current_user_id(
                 "verify_exp": True,
                 "verify_aud": False,
                 "verify_iss": False,
-                # Clerk SDKs can have small clock skew; be tolerant.
                 "verify_iat": False,
             },
             leeway=60,

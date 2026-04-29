@@ -99,7 +99,6 @@ async def run_pipeline_for_job(job_id: uuid.UUID) -> None:
 
 
 def enqueue_job(job: Job) -> None:
-    """Notify external worker via SQS."""
     _sqs_send(str(job.id), job.clerk_user_id)
 
 

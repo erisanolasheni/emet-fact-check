@@ -1,5 +1,3 @@
-"""MCP server factory wiring (no live MCP process)."""
-
 from app.config import Settings
 
 

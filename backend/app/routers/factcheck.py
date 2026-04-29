@@ -4,13 +4,13 @@ from datetime import datetime, timezone
 from fastapi import APIRouter, BackgroundTasks, Depends
 
 from app.config import settings
-
-logger = logging.getLogger(__name__)
 from app.db import async_session_factory
 from app.deps import require_premium
 from app.models import Job
 from app.schemas import FactCheckEnqueueResponse, FactCheckRequest
 from app.services.job_runner import enqueue_job, run_pipeline_for_job
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api", tags=["fact-check"])
 
@@ -39,12 +39,10 @@ async def create_fact_check(
         await session.refresh(job)
         jid = job.id
 
-    # SQS-only path: enqueue for Lambda/worker; skip queue when running inline locally.
     sqs_dispatch = bool(settings.sqs_queue_url) and not settings.emet_run_pipeline_inline
     if sqs_dispatch:
         enqueue_job(job)
 
-    # In-process: no SQS, or explicit local override when .env still has SQS_QUEUE_URL.
     run_inline = settings.use_background_worker and (
         not settings.sqs_queue_url or settings.emet_run_pipeline_inline
     )

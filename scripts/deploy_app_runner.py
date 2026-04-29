@@ -1,9 +1,7 @@
 #!/usr/bin/env python3
-"""Build and push ECR images (linux/amd64), optionally `apprunner start-deployment`.
+"""Build/push ECR (linux/amd64). Optional: `start-deployment` when APP_RUNNER_*_ARN is set.
 
-Env: AWS CLI (ecr, apprunner, sts), Docker buildx. Frontend build needs NEXT_PUBLIC_API_URL,
-NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY, NEXT_PUBLIC_CLERK_PREMIUM_PLAN_KEY. Optional: AWS_REGION,
-ECR_REGISTRY, IMAGE_TAG, APP_RUNNER_BACKEND_ARN, APP_RUNNER_FRONTEND_ARN.
+Requires: aws, docker buildx. Frontend build: NEXT_PUBLIC_API_URL, NEXT_PUBLIC_CLERK_*.
 """
 
 from __future__ import annotations

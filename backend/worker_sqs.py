@@ -14,9 +14,9 @@ from pathlib import Path
 import boto3
 from dotenv import load_dotenv
 
-from app.services.job_runner import run_pipeline_for_job
-
 load_dotenv(Path(__file__).resolve().parent.parent / ".env", override=True)
+
+from app.services.job_runner import run_pipeline_for_job
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)

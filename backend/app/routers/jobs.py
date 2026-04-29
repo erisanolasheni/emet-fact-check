@@ -50,8 +50,6 @@ async def stream_job(
     job_id: uuid.UUID,
     user_id: str = Depends(get_current_user_id),
 ):
-    """SSE progress stream — polls DB for updates (MVP). Use fetch() + ReadableStream from browser with Bearer."""
-
     async def event_generator():
         last_json = None
         try:

@@ -14,6 +14,11 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import settings
+from emet_agents.model_name import sync_llm_model_env
+
+# Agents resolve the model id at import time; normalize env before routers load emet_agents.
+sync_llm_model_env()
+
 from app.db import Base, engine
 from app.routers import factcheck
 from app.routers import jobs as jobs_router
@@ -27,7 +32,6 @@ async def lifespan(app: FastAPI):
 
     base = (settings.llm_base_url or "").strip().rstrip("/")
     if base and settings.openai_api_key:
-        # OpenAI-compatible base URL: use chat completions, not the Responses API.
         os.environ["OPENAI_AGENTS_DISABLE_TRACING"] = "true"
         set_use_responses_by_default(False)
         set_default_openai_client(

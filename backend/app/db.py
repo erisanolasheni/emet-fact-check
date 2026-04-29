@@ -13,7 +13,6 @@ class Base(DeclarativeBase):
 engine = create_async_engine(
     settings.database_url,
     echo=False,
-    # Avoid "connection is closed" after client disconnect/reload (SSE + poll) or server idle.
     pool_pre_ping=True,
     pool_recycle=280,
     pool_size=10,

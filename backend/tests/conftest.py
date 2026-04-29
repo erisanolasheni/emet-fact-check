@@ -3,12 +3,13 @@ import os
 import pytest
 from httpx import ASGITransport, AsyncClient
 
-os.environ.setdefault("DATABASE_URL", "sqlite+aiosqlite:///./emet_test.db")
+# Assign (do not setdefault): repo `.env` and the shell must not override test DB
+# or subscription gating — `Settings()` is built on first import of `app`.
+os.environ["DATABASE_URL"] = "sqlite+aiosqlite:///./emet_test.db"
+os.environ["REQUIRE_SUBSCRIPTION"] = "false"
 os.environ.setdefault("CLERK_JWKS_URL", "https://example.invalid/.well-known/jwks.json")
 os.environ.setdefault("EMET_MOCK_PIPELINE", "true")
 os.environ.setdefault("OPENAI_API_KEY", "sk-test")
-os.environ.setdefault("REQUIRE_SUBSCRIPTION", "false")
-# Repo-root .env may contain OpenRouter keys; agents tracing otherwise POSTs to api.openai.com.
 os.environ.setdefault("OPENAI_AGENTS_DISABLE_TRACING", "true")
 
 from app.deps import get_current_user_id  # noqa: E402

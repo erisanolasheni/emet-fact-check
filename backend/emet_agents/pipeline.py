@@ -208,8 +208,6 @@ async def run_fact_check_mock(
     question: str,
     on_progress: Callable[[dict], Awaitable[None]],
 ) -> FactCheckAgentResult:
-    """Deterministic output for CI / missing API key."""
-
     async def emit(phase: str, message: str, percent: int | None = None) -> None:
         await on_progress(
             {

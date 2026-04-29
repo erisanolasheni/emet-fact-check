@@ -17,13 +17,17 @@ class AgentFactItem(BaseModel):
     claim: str
     status: Literal["supported", "partially_supported", "contradicted", "unknown"]
     source_ids: list[str] = Field(default_factory=list)
-    # user_claim = headline claim; evidence = neutral "from sources" (omit/null = older reports — UI falls back to status colors)
-    role: Literal["user_claim", "evidence"] | None = None
+    role: Literal["user_claim", "evidence"] | None = Field(
+        default=None,
+        description="user_claim: headline; evidence: supporting detail. Omit for legacy payloads.",
+    )
 
 
 class FactCheckAgentResult(BaseModel):
-    # Whether the *user’s main* claim is supported, before narrative summary
-    verdict: Literal["supported", "refuted", "partial", "unclear"] = "unclear"
+    verdict: Literal["supported", "refuted", "partial", "unclear"] = Field(
+        default="unclear",
+        description="Judgment on the user's main claim.",
+    )
     verdict_text: str = Field(
         default="",
         description="One-line headline, e.g. Not supported: … or Supported: …",
@@ -31,7 +35,10 @@ class FactCheckAgentResult(BaseModel):
     summary: str
     facts: list[AgentFactItem]
     sources: list[AgentSourceRef]
-    # How well the *user’s specific claim* is supported (NOT generic research quality). Low when refuted.
-    confidence_percent: int = Field(ge=0, le=100)
+    confidence_percent: int = Field(
+        ge=0,
+        le=100,
+        description="Support for the user's specific claim (not generic research quality).",
+    )
     confidence_rationale: str
     limitations: list[str] = Field(default_factory=list)

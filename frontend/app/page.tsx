@@ -1,4 +1,7 @@
+"use client";
+
 import Link from "next/link";
+import { SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
 
 export default function HomePage() {
   return (
@@ -14,12 +17,17 @@ export default function HomePage() {
           >
             Pricing
           </Link>
-          <Link
-            href="/sign-in"
-            className="rounded-full bg-slate-900 px-5 py-2 text-sm font-medium text-white hover:bg-slate-800"
-          >
-            Sign in
-          </Link>
+          <SignedOut>
+            <Link
+              href="/sign-in"
+              className="rounded-full bg-slate-900 px-5 py-2 text-sm font-medium text-white hover:bg-slate-800"
+            >
+              Sign in
+            </Link>
+          </SignedOut>
+          <SignedIn>
+            <UserButton afterSignOutUrl="/" showName />
+          </SignedIn>
         </nav>
       </header>
 
@@ -29,8 +37,8 @@ export default function HomePage() {
           Fact-checking with evidence you can inspect
         </h1>
         <p className="mt-6 text-lg leading-relaxed text-slate-600">
-          Ask a question. Emet searches reputable sources, compares evidence, and returns cited
-          facts with an honest confidence score.
+          Ask a question. Emet searches reputable sources, compares evidence, and returns cited facts
+          with an honest confidence score.
         </p>
         <div className="mt-10 flex flex-wrap justify-center gap-4">
           <Link
@@ -39,12 +47,14 @@ export default function HomePage() {
           >
             Start a check
           </Link>
-          <Link
-            href="/sign-in"
-            className="rounded-full border border-slate-200 px-8 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50"
-          >
-            Sign in
-          </Link>
+          <SignedOut>
+            <Link
+              href="/sign-in"
+              className="rounded-full border border-slate-200 px-8 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+            >
+              Sign in
+            </Link>
+          </SignedOut>
         </div>
       </main>
     </div>

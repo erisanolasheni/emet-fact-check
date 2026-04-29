@@ -30,7 +30,6 @@ async def test_fact_check_flow(async_client):
 
 @pytest.mark.asyncio
 async def test_job_cross_user_denied(monkeypatch):
-    """Ensure another user's job id returns 403."""
     from httpx import ASGITransport, AsyncClient
 
     from app.db import async_session_factory

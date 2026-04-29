@@ -24,7 +24,7 @@
           "USE_BACKGROUND_WORKER": "true",
           "SQS_QUEUE_URL": "",
           "AWS_REGION": "us-east-1",
-          "CORS_ORIGINS": "http://localhost:3000,https://YOUR-FRONTEND-URL"
+          "CORS_ORIGINS": "http://localhost:3000,http://localhost:3001,https://YOUR-FRONTEND-URL"
         }
       }
     }

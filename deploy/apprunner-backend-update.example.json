@@ -23,7 +23,7 @@
           "EMET_MOCK_PIPELINE": "false",
           "USE_BACKGROUND_WORKER": "true",
           "AWS_REGION": "us-east-1",
-          "CORS_ORIGINS": "http://localhost:3000,https://YOUR-CLOUDFRONT,https://YOUR-FRONTEND-APP-RUNNER"
+          "CORS_ORIGINS": "http://localhost:3000,http://localhost:3001,https://YOUR-CLOUDFRONT,https://YOUR-FRONTEND-APP-RUNNER"
         }
       }
     }
