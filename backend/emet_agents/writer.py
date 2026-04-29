@@ -1,7 +1,17 @@
-from agents import Agent
+from agents import Agent, ModelSettings
 
 from emet_agents.model_name import resolved_chat_model
 from emet_agents.result_schema import FactCheckAgentResult
+
+
+def _writer_model_settings() -> ModelSettings:
+    try:
+        from app.config import settings
+
+        mt = int(settings.emet_writer_max_tokens)
+    except Exception:
+        mt = 16384
+    return ModelSettings(max_tokens=max(4096, min(mt, 128000)))
 
 
 WRITER_INSTRUCTIONS = """You are a senior fact-checker. You receive:
@@ -12,7 +22,7 @@ WRITER_INSTRUCTIONS = """You are a senior fact-checker. You receive:
 
 Hard rules (violations are unacceptable):
 - **sources[].url** MUST be **copied verbatim** from a line *URL (must be cited exactly for this source):* in the evidence. **Never** use example.com, example.org, placeholder.com, or any host not present in the evidence.
-- **sources[].snippet** MUST be a **short** excerpt or tight paraphrase of text that appears in the *Extracted on-page text* (or, if that block is empty, the **search snippet** only) for **that same URL**.
+- **sources[].snippet** MUST be a **short** excerpt or tight paraphrase (aim **≤240 characters** each; truncate with "…" if needed) from the *Extracted on-page text* (or, if that block is empty, the **search snippet** only) for **that same URL**. Long snippets cause output truncation and **break JSON** — stay terse.
 - **facts[].source_ids** may only list source ids (s1, s2, …) that you defined in *sources* and that actually support the claim; if you cannot tie a claim to evidence, set status to **unknown** and empty source_ids.
 - **Primary / secondary** tier: .gov, WHO, major regulators → primary; reputable news/institutions → secondary; other → other.
 
@@ -35,10 +45,10 @@ Facts (required structure):
 
 Output fields:
 - verdict, verdict_text (first-class)
-- summary: balanced bottom line
-- facts: include role on every item
-- sources: deduplicated, stable ids, hostname filled from the URL
-- confidence_percent, confidence_rationale, limitations
+- summary: balanced bottom line (keep concise — long text wastes tokens)
+- facts: include role on every item; keep claim text reasonably short
+- sources: deduplicated, stable ids, hostname filled from the URL; **≤12 sources** unless evidence forces more
+- confidence_percent, confidence_rationale, limitations (keep limitations to a few bullets)
 """
 
 
@@ -47,4 +57,5 @@ writer_agent = Agent(
     instructions=WRITER_INSTRUCTIONS,
     model=resolved_chat_model(),
     output_type=FactCheckAgentResult,
+    model_settings=_writer_model_settings(),
 )

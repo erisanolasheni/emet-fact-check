@@ -45,6 +45,9 @@ class Settings(BaseSettings):
     emet_page_excerpt_max_chars: int = 6000
     emet_fetch_concurrency: int = 4
 
+    # Writer structured JSON (FactCheckAgentResult) can be large; too low → truncated JSON / parse errors.
+    emet_writer_max_tokens: int = 16384
+
     sqs_queue_url: str = ""
     aws_region: str = "us-east-1"
     use_background_worker: bool = True
