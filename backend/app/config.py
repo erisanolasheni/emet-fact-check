@@ -22,7 +22,7 @@ class Settings(BaseSettings):
     require_subscription: bool = False
     openai_api_key: str = ""
     llm_base_url: str = ""
-    llm_model: str = "gpt-4o-mini"
+    llm_model: str = "openai/gpt-4o"
 
     emet_mcp_enabled: bool = False
     emet_mcp_transport: str = ""  # stdio | sse | streamable_http

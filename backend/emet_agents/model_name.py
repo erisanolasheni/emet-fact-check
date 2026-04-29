@@ -32,10 +32,10 @@ def sync_llm_model_env() -> str:
         (os.getenv("LLM_MODEL") or "").strip()
         or (os.getenv("OPENAI_MODEL") or "").strip()
         or _from_pydantic_settings()
-        or "gpt-4o-mini"
+        or "openai/gpt-4o"
     )
     if not v:
-        v = "gpt-4o-mini"
+        v = "openai/gpt-4o"
     out = _strip_duplicate_openai_namespace(v)
     os.environ["LLM_MODEL"] = out
     return out

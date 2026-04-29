@@ -226,7 +226,7 @@ Key variables:
 | `CLERK_SECRET_KEY` | Clerk secret (subscription API + dashboard) |
 | `OPENAI_API_KEY` | LLM key (OpenAI or OpenRouter `sk-or-v1-*`, etc.) |
 | `LLM_BASE_URL` | Optional OpenAI-compatible base URL (e.g. OpenRouter). Empty = official OpenAI. With `EMET_STRUCTURED_RESEARCH=false` and no MCP, empty also enables `WebSearchTool` for the legacy path. |
-| `LLM_MODEL` | Chat model id for the configured API (e.g. `openai/gpt-4o-mini` on OpenRouter). |
+| `LLM_MODEL` | Chat model id for the configured API (e.g. `openai/gpt-4o` on OpenRouter). |
 | `GOOGLE_API_KEY` / `GOOGLE_CSE_ID` | Optional — **Programmable Search** JSON API + search engine id for ranked results in structured research |
 | `EMET_STRUCTURED_RESEARCH` | `true` (default): Google CSE or DDG + trafilatura; `false`: legacy search agent only |
 | `EMET_RESEARCH_TOP_URLS` | How many result URLs to fetch per planned query (default `5`) |
