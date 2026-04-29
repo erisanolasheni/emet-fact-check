@@ -387,7 +387,13 @@ cd backend && pytest
 cd frontend && npm run lint && npm run test && npm run build
 ```
 
-GitHub Actions (`.github/workflows/ci.yml`): on every **push** and **pull request**, runs backend **pytest** and frontend **lint**, **test**, and **build**. On **push to `main`/`master`** (and on **workflow_dispatch**), after tests pass, **deploy** builds **linux/amd64** images, pushes to **ECR**, and runs **`aws apprunner start-deployment`** for backend and frontend (same as `scripts/deploy_app_runner.py`).
+GitHub Actions:
+
+- **`backend.yml`** — **Backend CI**: `pytest` on **pull requests** and **pushes** to branches other than `main`/`master` (plus **workflow_dispatch**).
+- **`frontend.yml`** — **Frontend CI**: **lint**, **test**, **build** on the same triggers.
+- **`deploy.yml`** — **Deploy**: on **push to `main`/`master`** or **workflow_dispatch**, runs **backend + frontend** checks (via reusable workflows), then **ECR** push + **App Runner** deployment (`scripts/deploy_app_runner.py`).
+
+Shared steps live in **`backend-ci.yml`** and **`frontend-ci.yml`** (`workflow_call` reusables) so tests are not duplicated across feature branches and `main`.
 
 **Repository secrets** (Settings → Secrets and variables → Actions): `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` (IAM user or role with ECR push + App Runner deploy), `APP_RUNNER_BACKEND_ARN`, `APP_RUNNER_FRONTEND_ARN`, `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`.
 

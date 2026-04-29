@@ -1,0 +1,17 @@
+name: Backend CI
+
+on:
+  pull_request:
+  push:
+    branches-ignore:
+      - main
+      - master
+  workflow_dispatch:
+
+concurrency:
+  group: backend-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    uses: ./.github/workflows/backend-ci.yml
