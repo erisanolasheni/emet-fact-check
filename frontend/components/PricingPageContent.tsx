@@ -69,9 +69,7 @@ export function PricingPageContent() {
           Choose <span className="text-blue-600">Emet Premium</span>
         </h1>
         <p className="mx-auto mt-4 max-w-2xl text-center text-lg text-slate-600">
-          Subscribe in Clerk Billing to unlock the full fact-check workspace. Use the same plan key
-          as in your app environment (e.g. <code className="rounded bg-slate-100 px-1.5 py-0.5 text-sm">emet_subscription</code>
-          ).
+          Subscribe in Clerk Billing to unlock the full fact-check workspace.
         </p>
 
         <div className="mt-12 rounded-2xl border border-slate-200 bg-white p-8 shadow-lg shadow-slate-200/50 md:p-10">
@@ -135,20 +133,6 @@ export function PricingPageContent() {
             </SignedIn>
           </div>
         </div>
-
-        <p className="mt-10 text-center text-xs text-slate-500">
-          Billing is handled in the{" "}
-          <a
-            href="https://dashboard.clerk.com"
-            target="_blank"
-            rel="noreferrer"
-            className="text-blue-600 hover:underline"
-          >
-            Clerk Dashboard
-          </a>
-          . Ensure the plan key matches <code className="rounded bg-slate-100 px-1">CLERK_PREMIUM_PLAN_KEY</code> /{" "}
-          <code className="rounded bg-slate-100 px-1">NEXT_PUBLIC_CLERK_PREMIUM_PLAN_KEY</code>.
-        </p>
       </main>
     </div>
   );
