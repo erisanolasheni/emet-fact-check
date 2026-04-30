@@ -12,8 +12,7 @@ export function PricingFallback() {
       <h2 className="text-xl font-semibold text-slate-900">Emet Premium</h2>
       <p className="mt-2 text-sm leading-relaxed text-slate-600">
         Fact-checking with multi-source comparison and citations requires an active subscription in
-        Clerk Billing (same plan key as in your app config, e.g.{" "}
-        <code className="rounded bg-slate-100 px-1.5 py-0.5 text-xs">emet_subscription</code>).
+        Clerk Billing.
       </p>
       <div className="mt-6 flex flex-col items-center gap-3">
         <Link
